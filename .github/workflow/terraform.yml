@@ -1,30 +1,46 @@
-name: "Terraform Automation Demo"
+name: "Terraform Azure Backend Automation"
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
+
+# Permissions needed for GitHub to interact with your repository
+permissions:
+  contents: read
 
 jobs:
   terraform:
     name: "Terraform"
     runs-on: ubuntu-latest
     
+    # These Environment Variables allow Terraform to log into Azure
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
     steps:
-      - name: Checkout
+      # 1. Pull the code from your GitHub repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
+      # 2. Install the Terraform CLI on the GitHub runner
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      # 3. Initialize Terraform (Connects to the Azure Storage Backend)
       - name: Terraform Init
         run: terraform init
 
+      # 4. Show what changes will be made (Runs on every push/PR)
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color
-        continue-on-error: true
 
+      # 5. Apply changes (Only runs when you push/merge to the 'main' branch)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
