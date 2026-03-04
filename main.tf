@@ -5,7 +5,7 @@ locals {
 
   resource_name = format("%s-%s-%s", local.assetname, local.environment, local.location)
 }
-
+/*
 resource "azurerm_resource_group" "resourcegroup" {
   name     = "${local.resource_name}-rg-main"
   location = local.location
@@ -28,7 +28,7 @@ module "azurerm_storage_accounts" {
   environment             = local.environment
   instance_count          = 1
 }
-/*
+
 module "azurerm_service_plan" {
   source = "./modules/azurerm_service_plan"
   resource_group_name     = azurerm_resource_group.resourcegroup.name
