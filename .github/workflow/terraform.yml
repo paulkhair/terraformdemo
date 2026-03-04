@@ -1,18 +1,27 @@
-name: "Terraform Automation Demo"
+name: "Terraform GitHub Local Automation"
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
 
 jobs:
   terraform:
-    name: "Terraform"
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
+
+      # 1. Restore the state file from the previous run
+      - name: Restore Terraform State
+        uses: actions/cache@v3
+        with:
+          path: |
+            .terraform
+            terraform.tfstate
+            terraform.tfstate.backup
+          key: terraform-state-${{ github.run_id }}
+          restore-keys: |
+            terraform-state-
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -21,10 +30,17 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color
-        continue-on-error: true
+        run: terraform plan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
