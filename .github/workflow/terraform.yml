@@ -44,3 +44,13 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          # 2. Save the updated state file so the next run can find it
+      - name: Save Terraform State
+        uses: actions/cache/save@v3
+        if: always() # Ensures state is saved even if the apply fails partially
+        with:
+          path: |
+            .terraform
+            terraform.tfstate
+            terraform.tfstate.backup
+          key: terraform-state-${{ github.run_id }}
